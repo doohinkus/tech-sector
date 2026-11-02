@@ -372,9 +372,9 @@
             // Apply presets for XLK sector states
             if (preset === 'good') {
                 config.numSegments = 180;
-                config.bodyWidth = 26;
+                config.bodyWidth = 13;
                 config.agility = 0.12;
-                config.speed = 3.8;
+                config.speed = 2.0;
                 config.decayRate = 0.98;
                 config.pulseSpeed = 1.9;
                 config.showEmbers = true;
@@ -386,9 +386,9 @@
                 // palette resolved after palettes definition
             } else if (preset === 'neutral') {
                 config.numSegments = 145;
-                config.bodyWidth = 20;
+                config.bodyWidth = 10;
                 config.agility = 0.08;
-                config.speed = 3.2;
+                config.speed = 1.8;
                 config.decayRate = 0.96;
                 config.pulseSpeed = 1.4;
                 config.showEmbers = true;
@@ -400,9 +400,9 @@
                 // palette resolved after palettes definition
             } else if (preset === 'bad') {
                 config.numSegments = 100;
-                config.bodyWidth = 14;
+                config.bodyWidth = 7;
                 config.agility = 0.06;
-                config.speed = 2.6;
+                config.speed = 1.5;
                 config.decayRate = 0.94;
                 config.pulseSpeed = 0.8;
                 config.showEmbers = false;
@@ -766,7 +766,7 @@
                     ctx.textBaseline = 'middle';
                     const statusLabel = preset ? preset : 'neutral';
                     const dateLabel = new Date().toISOString().slice(0,10);
-                    ctx.fillText(`Tech sector (${dateLabel}): ${statusLabel}`, canvas.width/2, canvas.height/2);
+                    ctx.fillText(`${statusLabel}`, canvas.width/2, canvas.height/2);
                     ctx.restore();
                 });
             }
