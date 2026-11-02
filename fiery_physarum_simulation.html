@@ -383,7 +383,7 @@
                 config.loop.period = periodParam ? parseInt(periodParam) : 900;
                 config.loop.noiseAmp = noiseParam ? parseFloat(noiseParam) : 0.22;
                 config.loop.speed = speedParam ? parseFloat(speedParam) : 1.0;
-                activePalette = palettes.gold;
+                // palette resolved after palettes definition
             } else if (preset === 'neutral') {
                 config.numSegments = 145;
                 config.bodyWidth = 20;
@@ -397,7 +397,7 @@
                 config.loop.period = periodParam ? parseInt(periodParam) : 900;
                 config.loop.noiseAmp = noiseParam ? parseFloat(noiseParam) : 0.25;
                 config.loop.speed = speedParam ? parseFloat(speedParam) : 1.0;
-                activePalette = palettes.plasma;
+                // palette resolved after palettes definition
             } else if (preset === 'bad') {
                 config.numSegments = 100;
                 config.bodyWidth = 14;
@@ -411,7 +411,7 @@
                 config.loop.period = periodParam ? parseInt(periodParam) : 900;
                 config.loop.noiseAmp = noiseParam ? parseFloat(noiseParam) : 0.28;
                 config.loop.speed = speedParam ? parseFloat(speedParam) : 0.95;
-                activePalette = palettes.blood;
+                // palette resolved after palettes definition
             } else if (autoMode) {
                 config.motionMode = 'loop';
                 if (periodParam) config.loop.period = parseInt(periodParam);
@@ -502,7 +502,11 @@
                     ])
                 }
             };
-            let activePalette = palettes.inferno;
+            let activePalette;
+            if (preset === 'good') activePalette = palettes.gold;
+            else if (preset === 'neutral') activePalette = palettes.plasma;
+            else if (preset === 'bad') activePalette = palettes.blood;
+            else activePalette = palettes.inferno;
 
             function createPalette(stops) {
                 const lut = new Uint32Array(256);
