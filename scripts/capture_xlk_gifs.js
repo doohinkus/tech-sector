@@ -20,7 +20,7 @@ async function captureState(state, period = 900, fps = 30) {
   
   const url = `file://${HTML_PATH}?preset=${state}&size=256&hideUI=true&mode=loop&period=${period}`;
   await page.goto(url, { waitUntil: 'load' });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(2000);
   
   // Capture exactly one period of frames
   for (let i = 0; i < period; i++) {
