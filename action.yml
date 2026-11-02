@@ -1,0 +1,17 @@
+name: "Finance Animation - XLK status GIF"
+description: "Fetch XLK status and update the status GIF"
+inputs:
+  assets-dir:
+    description: "Directory to write GIFs into"
+    required: false
+    default: "assets"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Python deps
+      shell: bash
+      run: pip install yfinance
+    - name: Run update
+      shell: bash
+      run: python3 scripts/fetch_and_update_xlk.py
+      working-directory: ${{ github.action_path }}

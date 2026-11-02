@@ -6,7 +6,8 @@
   "scripts": {
     "capture": "node scripts/capture_xlk_gifs.js",
     "update": "python3 scripts/fetch_and_update_xlk.py",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "npm run update"
   },
   "keywords": [],
   "author": "",
