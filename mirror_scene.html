@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mirror Scene</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+    canvas { display: block; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const preset = (params.get('preset') || 'neutral').toLowerCase();
+    const size = parseInt(params.get('size') || '256', 10);
+    const hideUI = params.get('hideUI') === 'true';
+
+    const palettes = {
+      good: { light: 0x2ecc71, bg: 0x0b2a1a, expr: 'happy' },
+      neutral: { light: 0x95a5a6, bg: 0x1a1a1a, expr: 'neutral' },
+      bad: { light: 0xe74c3c, bg: 0x2a0b0b, expr: 'sad' },
+    };
+    const P = palettes[preset] || palettes.neutral;
+
+    const app = new PIXI.Application({
+      width: size,
+      height: size,
+      background: P.bg,
+      antialias: false,
+      resolution: 1,
+    });
+    document.body.appendChild(app.view);
+
+    const px = Math.max(2, Math.floor(size / 32));
+    const g = new PIXI.Graphics();
+
+    function rect(x, y, w, h, color) {
+      g.beginFill(color);
+      g.drawRect(x * px, y * px, w * px, h * px);
+      g.endFill();
+    }
+
+    function drawScene(bob) {
+      g.clear();
+      // lighting overlay
+      g.beginFill(P.light, 0.18);
+      g.drawRect(0, 0, size, size);
+      g.endFill();
+
+      // mirror frame (right side)
+      rect(20, 4, 11, 24, 0x7f8c8d);
+      rect(21, 5, 9, 22, 0xbdc3c7); // mirror surface
+      // mirror shine
+      rect(22, 6, 2, 20, 0xecf0f1);
+
+      // character (left)
+      const by = bob;
+      // body
+      rect(6, 16 + by, 6, 10, 0x3498db);
+      // head
+      rect(7, 10 + by, 4, 6, 0xf1c40f);
+      // eyes
+      rect(8, 12 + by, 1, 1, 0x2c3e50);
+      rect(10, 12 + by, 1, 1, 0x2c3e50);
+      // mouth based on expression
+      if (P.expr === 'happy') {
+        rect(8, 14 + by, 3, 1, 0x2c3e50);
+        rect(7, 13 + by, 1, 1, 0x2c3e50);
+        rect(11, 13 + by, 1, 1, 0x2c3e50);
+      } else if (P.expr === 'sad') {
+        rect(8, 15 + by, 3, 1, 0x2c3e50);
+        rect(7, 16 + by, 1, 1, 0x2c3e50);
+        rect(11, 16 + by, 1, 1, 0x2c3e50);
+      } else {
+        rect(8, 14 + by, 3, 1, 0x2c3e50);
+      }
+
+      // reflection in mirror (mirrored x)
+      // mirror center x ~ 25.5, character center ~9 => reflection center ~32? clamp
+      const rx = 26;
+      rect(rx, 16 + by, 6, 10, 0x2980b9);
+      rect(rx + 1, 10 + by, 4, 6, 0xf39c12);
+      rect(rx + 1, 12 + by, 1, 1, 0x2c3e50);
+      rect(rx + 3, 12 + by, 1, 1, 0x2c3e50);
+      if (P.expr === 'happy') {
+        rect(rx + 1, 13 + by, 1, 1, 0x2c3e50);
+        rect(rx + 2, 14 + by, 3, 1, 0x2c3e50);
+        rect(rx + 5, 13 + by, 1, 1, 0x2c3e50);
+      } else if (P.expr === 'sad') {
+        rect(rx + 1, 16 + by, 1, 1, 0x2c3e50);
+        rect(rx + 2, 15 + by, 3, 1, 0x2c3e50);
+        rect(rx + 5, 16 + by, 1, 1, 0x2c3e50);
+      } else {
+        rect(rx + 2, 14 + by, 3, 1, 0x2c3e50);
+      }
+    }
+
+    app.stage.addChild(g);
+
+    let t = 0;
+    app.ticker.add(() => {
+      t += 0.05;
+      const bob = Math.round(Math.sin(t) * 1);
+      drawScene(bob);
+    });
+  </script>
+</body>
+</html>
