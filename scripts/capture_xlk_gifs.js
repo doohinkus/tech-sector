@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const HTML_PATH = path.resolve(__dirname, '../mirror_scene.html');
+const HTML_PATH = path.resolve(__dirname, '../magician_scene.html');
 const ASSETS_DIR = path.resolve(__dirname, '../assets');
 const FRAMES_DIR = path.resolve(__dirname, '../.frames_tmp');
 

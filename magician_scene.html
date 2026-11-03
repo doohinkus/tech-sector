@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Magician Scene</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+    canvas { display: block; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const preset = (params.get('preset') || 'neutral').toLowerCase();
+    const size = parseInt(params.get('size') || '256', 10);
+
+    const stateConfig = {
+      good: { bg: 0x0b2a1a, dropColor: 0x2ecc71, dropShape: 'up' },
+      neutral: { bg: 0x1a1a1a, dropColor: 0x95a5a6, dropShape: 'dot' },
+      bad: { bg: 0x2a0b0b, dropColor: 0xe74c3c, dropShape: 'down' },
+    };
+    const C = stateConfig[preset] || stateConfig.neutral;
+
+    const app = new PIXI.Application({
+      width: size,
+      height: size,
+      background: C.bg,
+      antialias: false,
+      resolution: 1,
+    });
+    document.body.appendChild(app.view);
+
+    // Load magician frames
+    const frames = [];
+    for (let i = 0; i < 27; i++) {
+      const idx = String(i).padStart(2, '0');
+      frames.push(PIXI.Texture.from(`assets/character_frames/frame_${idx}.png`));
+    }
+    const mag = new PIXI.AnimatedSprite(frames);
+    mag.anchor.set(0.5);
+    mag.x = size * 0.5;
+    mag.y = size * 0.55;
+    const scale = size / 1000 * 0.9;
+    mag.scale.set(scale);
+    mag.animationSpeed = 27 / 60; // ~27 frames per 2s-ish; adjusted by ticker
+    mag.play();
+    app.stage.addChild(mag);
+
+    // Drop items container
+    const drops = new PIXI.Container();
+    app.stage.addChild(drops);
+
+    function makeDrop() {
+      const g = new PIXI.Graphics();
+      g.beginFill(C.dropColor);
+      if (C.dropShape === 'up') {
+        g.moveTo(0, -6); g.lineTo(4, 0); g.lineTo(2, 0); g.lineTo(2, 6); g.lineTo(-2, 6); g.lineTo(-2, 0); g.lineTo(-4, 0); g.closePath();
+      } else if (C.dropShape === 'down') {
+        g.moveTo(0, 6); g.lineTo(4, 0); g.lineTo(2, 0); g.lineTo(2, -6); g.lineTo(-2, -6); g.lineTo(-2, 0); g.lineTo(-4, 0); g.closePath();
+      } else {
+        g.drawCircle(0, 0, 4);
+      }
+      g.endFill();
+      g.x = size * 0.3 + Math.random() * size * 0.4;
+      g.y = size * 0.15;
+      g.vy = 1.5 + Math.random() * 1.5;
+      g.vx = (Math.random() - 0.5) * 0.5;
+      g.alpha = 1;
+      drops.addChild(g);
+      return g;
+    }
+
+    let spawnTimer = 0;
+    app.ticker.add(() => {
+      spawnTimer++;
+      if (spawnTimer % 12 === 0) makeDrop();
+      for (let i = drops.children.length - 1; i >= 0; i--) {
+        const d = drops.children[i];
+        d.x += d.vx;
+        d.y += d.vy;
+        d.vy += 0.05;
+        d.alpha -= 0.008;
+        if (d.alpha <= 0 || d.y > size + 20) {
+          drops.removeChild(d);
+          d.destroy();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
