@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const HTML_PATH = path.resolve(__dirname, '../magician_scene.html');
+const HTML_PATH = path.resolve(__dirname, '../firefly_scene.html');
 const ASSETS_DIR = path.resolve(__dirname, '../assets');
 const FRAMES_DIR = path.resolve(__dirname, '../.frames_tmp');
 
@@ -51,7 +51,7 @@ async function main() {
   fs.mkdirSync(ASSETS_DIR, { recursive: true });
   fs.mkdirSync(FRAMES_DIR, { recursive: true });
   
-  const period = 900;
+  const period = 150;
   const fps = 30;
   
   for (const state of ['good', 'neutral', 'bad']) {
