@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Firefly Kuramoto Sync</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const preset = (params.get('preset') || 'neutral').toLowerCase();
+    const size = parseInt(params.get('size') || '256', 10);
+
+    const cfg = {
+      good:    { K: 4.0, spread: 0.35, color: [46, 204, 113],  bg: [11, 42, 26] },
+      neutral: { K: 1.2, spread: 0.85, color: [149, 165, 166], bg: [26, 26, 26] },
+      bad:     { K: 0.15, spread: 1.6,  color: [231, 76, 60],   bg: [42, 11, 11] },
+    };
+    const C = cfg[preset] || cfg.neutral;
+
+    const canvas = document.getElementById('c');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Background fill
+    ctx.fillStyle = `rgb(${C.bg[0]},${C.bg[1]},${C.bg[2]})`;
+    ctx.fillRect(0, 0, size, size);
+
+    const N = 120;
+    const fireflies = Array.from({ length: N }, () => ({
+      x: Math.random() * size,
+      y: Math.random() * size,
+      theta: Math.random() * Math.PI * 2,
+      omega: (Math.random() - 0.5) * C.spread + 1.0,
+    }));
+
+    let last = performance.now();
+    function frame() {
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+
+      // Mean-field Kuramoto
+      let sx = 0, sy = 0;
+      for (const f of fireflies) { sx += Math.cos(f.theta); sy += Math.sin(f.theta); }
+      const meanPhase = Math.atan2(sy, sx);
+      const r = Math.hypot(sx, sy) / N; // order parameter
+
+      for (const f of fireflies) {
+        f.theta += (f.omega + C.K * Math.sin(meanPhase - f.theta)) * dt;
+      }
+
+      // Fade background slightly for trails? Keep crisp for GIF clarity: full redraw.
+      ctx.fillStyle = `rgb(${C.bg[0]},${C.bg[1]},${C.bg[2]})`;
+      ctx.fillRect(0, 0, size, size);
+
+      // Ambient glow of sync (brighter when coherent)
+      if (r > 0.4) {
+        const grd = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size*0.7);
+        grd.addColorStop(0, `rgba(${C.color[0]},${C.color[1]},${C.color[2]},${0.12*r})`);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, size, size);
+      }
+
+      ctx.globalCompositeOperation = 'lighter';
+      for (const f of fireflies) {
+        const bright = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(f.theta));
+        const radius = 1.6 + 1.2 * bright;
+        const grd = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius * 4);
+        grd.addColorStop(0, `rgba(${C.color[0]},${C.color[1]},${C.color[2]},${bright})`);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, radius * 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
