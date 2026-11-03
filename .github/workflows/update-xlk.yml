@@ -2,7 +2,7 @@ name: Update XLK status GIF
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 14-20 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -12,26 +12,51 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Check market hours
+        if: github.event_name == 'schedule'
+        run: |
+          hour=$(TZ=America/New_York date +%H)
+          min=$(TZ=America/New_York date +%M)
+          dow=$(TZ=America/New_York date +%u)
+          mins=$((10#$hour * 60 + 10#$min))
+          open=$((9 * 60 + 30))
+          close=$((16 * 60))
+          if [ "$dow" -ge 6 ] || [ "$mins" -lt "$open" ] || [ "$mins" -ge "$close" ]; then
+            echo "MARKET_OPEN=false" >> "$GITHUB_ENV"
+            echo "Market closed; skipping update."
+          else
+            echo "MARKET_OPEN=true" >> "$GITHUB_ENV"
+            echo "Market open; proceeding."
+          fi
       - uses: actions/checkout@v4
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
       - uses: actions/setup-python@v5
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         with:
           python-version: "3.x"
       - uses: actions/setup-node@v4
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         with:
           node-version: "20"
       - name: Install system deps
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
       - name: Install Python deps
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: pip install yfinance
       - name: Install Node deps
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: npm ci
       - name: Install Playwright browsers
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: npx playwright install chromium --with-deps
       - name: Update status
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: npm run update
       - name: Commit changes
+        if: github.event_name != 'schedule' || env.MARKET_OPEN != 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
