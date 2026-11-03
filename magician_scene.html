@@ -10,6 +10,7 @@
 </head>
 <body>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+  <script src="assets/character_frames.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const preset = (params.get('preset') || 'neutral').toLowerCase();
@@ -32,11 +33,7 @@
     document.body.appendChild(app.view);
 
     // Load magician frames
-    const frames = [];
-    for (let i = 0; i < 27; i++) {
-      const idx = String(i).padStart(2, '0');
-      frames.push(PIXI.Texture.from(`assets/character_frames/frame_${idx}.png`));
-    }
+    const frames = (window.CHARACTER_FRAMES || []).map(src => PIXI.Texture.from(src));
     const mag = new PIXI.AnimatedSprite(frames);
     mag.anchor.set(0.5);
     mag.x = size * 0.5;
