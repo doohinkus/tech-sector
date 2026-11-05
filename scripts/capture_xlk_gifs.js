@@ -52,7 +52,7 @@ async function main() {
   fs.mkdirSync(ASSETS_DIR, { recursive: true });
   fs.mkdirSync(FRAMES_DIR, { recursive: true });
   
-  const period = 150;
+  const period = 300;
   const fps = 30;
   
   for (const state of ['good', 'neutral', 'bad']) {
