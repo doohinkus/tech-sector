@@ -19,7 +19,8 @@ async function captureState(state, period = 900, fps = 30) {
   const page = await context.newPage();
   
   const label = state.toUpperCase();
-  const url = `file://${HTML_PATH}?preset=${state}&size=256&hideUI=true&mode=loop&period=${period}&text=${encodeURIComponent(label)}`;
+  const text = (process.argv[3] || label);
+  const url = `file://${HTML_PATH}?preset=${state}&size=256&hideUI=true&mode=loop&period=${period}&text=${encodeURIComponent(text)}`;
   await page.goto(url, { waitUntil: 'load' });
   await page.waitForTimeout(2000);
   
@@ -54,9 +55,14 @@ async function main() {
   
   const period = 300;
   const fps = 30;
-  
-  for (const state of ['good', 'neutral', 'bad']) {
-    await captureState(state, period, fps);
+
+  const argState = process.argv[2];
+  if (argState) {
+    await captureState(argState, period, fps);
+  } else {
+    for (const state of ['good', 'neutral', 'bad']) {
+      await captureState(state, period, fps);
+    }
   }
   
   fs.rmSync(FRAMES_DIR, { recursive: true, force: true });

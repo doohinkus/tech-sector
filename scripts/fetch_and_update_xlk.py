@@ -63,13 +63,13 @@ def update_status():
     source_gif = os.path.join(ASSETS_DIR, f'xlk-{state}.gif')
     target_gif = os.path.join(ASSETS_DIR, 'xlk-status.gif')
     
-    # Regenerate if GIF doesn't exist
-    if not os.path.exists(source_gif):
-        print(f"Generating GIFs (missing {source_gif})...")
-        try:
-            subprocess.run(['node', os.path.join(SCRIPTS_DIR, 'capture_xlk_gifs.js')], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to generate GIFs: {e}", file=sys.stderr)
+    # Render the current state GIF with the live percentage text
+    percent_text = f"{status['change_pct']:+.2f}%\\n{state.upper()}"
+    print(f"Generating GIF for {state} ({percent_text})...")
+    try:
+        subprocess.run(['node', os.path.join(SCRIPTS_DIR, 'capture_xlk_gifs.js'), state, percent_text], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to generate GIF: {e}", file=sys.stderr)
     
     # Copy/swap to current status
     if os.path.exists(source_gif):
