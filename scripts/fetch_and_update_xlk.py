@@ -64,7 +64,7 @@ def update_status():
     target_gif = os.path.join(ASSETS_DIR, 'xlk-status.gif')
     
     # Render the current state GIF with the live percentage text
-    percent_text = f"{status['change_pct']:+.2f}%\\n{state.upper()}"
+    percent_text = f"{status['change_pct']:+.2f}%\n{state.upper()}"
     print(f"Generating GIF for {state} ({percent_text})...")
     try:
         subprocess.run(['node', os.path.join(SCRIPTS_DIR, 'capture_xlk_gifs.js'), state, percent_text], check=True)
