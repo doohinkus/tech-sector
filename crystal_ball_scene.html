@@ -25,11 +25,13 @@
     const hideUI = params.get('hideUI') === 'true';
 
     const themes = {
-      good:    { glow: 'rgba(46, 204, 113, 0.25)',  mist: [120, 220, 160], word: 'UP' },
-      neutral: { glow: 'rgba(138, 43, 226, 0.2)',   mist: [200, 185, 255], word: 'FLAT' },
-      bad:     { glow: 'rgba(231, 76, 60, 0.25)',   mist: [255, 150, 150], word: 'DOWN' },
+      good:    { glow: 'rgba(46, 204, 113, 0.25)',  mist: [120, 220, 160], word: 'GOOD' },
+      neutral: { glow: 'rgba(138, 43, 226, 0.2)',   mist: [200, 185, 255], word: 'NEUTRAL' },
+      bad:     { glow: 'rgba(231, 76, 60, 0.25)',   mist: [255, 150, 150], word: 'BAD' },
     };
     const T = themes[preset] || themes.neutral;
+    const textParam = params.get('text');
+    if (textParam) T.word = textParam.replace(/\\n/g, '\n');
 
     const canvas = document.getElementById('ballCanvas');
     canvas.width = size;
@@ -139,10 +141,16 @@
     function getTextTargets(text) {
       textCtx.clearRect(0,0,size,size);
       textCtx.fillStyle = '#ffffff';
-      textCtx.font = `${Math.round(size*0.06875)}px "Press Start 2P", monospace`;
+      const fontSize = Math.round(size*0.06875);
+      textCtx.font = `${fontSize}px "Press Start 2P", monospace`;
       textCtx.textAlign = 'center';
       textCtx.textBaseline = 'middle';
-      textCtx.fillText(text.toUpperCase(), centerX, centerY);
+      const lines = text.toUpperCase().split('\\n');
+      const lineHeight = fontSize * 1.4;
+      const startY = centerY - ((lines.length - 1) * lineHeight) / 2;
+      lines.forEach((line, i) => {
+        textCtx.fillText(line, centerX, startY + i * lineHeight);
+      });
       const imgData = textCtx.getImageData(0,0,size,size).data;
       const targets = [];
       const stride = Math.max(1, Math.round(size/128));

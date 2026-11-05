@@ -18,7 +18,8 @@ async function captureState(state, period = 900, fps = 30) {
   });
   const page = await context.newPage();
   
-  const url = `file://${HTML_PATH}?preset=${state}&size=256&hideUI=true&mode=loop&period=${period}`;
+  const label = state.toUpperCase();
+  const url = `file://${HTML_PATH}?preset=${state}&size=256&hideUI=true&mode=loop&period=${period}&text=${encodeURIComponent(label)}`;
   await page.goto(url, { waitUntil: 'load' });
   await page.waitForTimeout(2000);
   
