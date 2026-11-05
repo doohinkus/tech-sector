@@ -173,7 +173,7 @@
       });
       state = 'FORMING';
       clearTimeout(stateTimer);
-      stateTimer = setTimeout(startDissolve, 1500);
+      stateTimer = setTimeout(startDissolve, 2500);
     }
 
     function startDissolve() {
@@ -188,8 +188,8 @@
       stateTimer = setTimeout(() => {
         state = 'MIST';
         particles.forEach(p => p.resetInMist());
-        stateTimer = setTimeout(() => formWord(T.word), 600);
-      }, 1200);
+        stateTimer = setTimeout(() => formWord(T.word), 900);
+      }, 1500);
     }
 
     function animate() {
