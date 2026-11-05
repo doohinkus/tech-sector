@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crystal Ball Scene</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0b0716; overflow: hidden; }
+    canvas { display: block; }
+    .hidden { display: none !important; }
+    .crystal-ball-wrapper { position: relative; border-radius: 50%; overflow: hidden; }
+    .stand { background: linear-gradient(180deg, #4a2c11 0%, #201004 100%); border-radius: 50% 50% 10% 10% / 100% 100% 20% 20%; box-shadow: 0 10px 20px rgba(0,0,0,0.8); border-top: 3px solid #6e431f; }
+  </style>
+</head>
+<body>
+  <div class="crystal-ball-wrapper" id="wrapper">
+    <canvas id="ballCanvas"></canvas>
+  </div>
+  <div class="stand" id="stand"></div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const preset = (params.get('preset') || 'neutral').toLowerCase();
+    const size = parseInt(params.get('size') || '256', 10);
+    const hideUI = params.get('hideUI') === 'true';
+
+    const themes = {
+      good:    { glow: 'rgba(46, 204, 113, 0.25)',  mist: [120, 220, 160], word: 'UP' },
+      neutral: { glow: 'rgba(138, 43, 226, 0.2)',   mist: [200, 185, 255], word: 'FLAT' },
+      bad:     { glow: 'rgba(231, 76, 60, 0.25)',   mist: [255, 150, 150], word: 'DOWN' },
+    };
+    const T = themes[preset] || themes.neutral;
+
+    const canvas = document.getElementById('ballCanvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('wrapper');
+    const stand = document.getElementById('stand');
+
+    wrapper.style.width = size + 'px';
+    wrapper.style.height = size + 'px';
+    wrapper.style.boxShadow = `0 0 ${Math.round(size*0.1)}px rgba(138,43,226,0.4), inset 0 0 ${Math.round(size*0.125)}px rgba(255,255,255,0.3)`;
+    wrapper.style.background = 'radial-gradient(circle at 35% 35%, rgba(60,20,100,0.3), rgba(10,5,25,0.9))';
+    stand.style.width = Math.round(size*0.44) + 'px';
+    stand.style.height = Math.round(size*0.11) + 'px';
+    stand.style.marginTop = '-' + Math.round(size*0.0625) + 'px';
+
+    if (hideUI) {
+      stand.classList.add('hidden');
+    }
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const ballRadius = size * 0.453;
+
+    const PARTICLE_COUNT = Math.max(400, Math.round(1500 * (size / 320) * (size / 320)));
+    const particles = [];
+    let state = 'MIST';
+    let stateTimer = null;
+
+    const textCanvas = document.createElement('canvas');
+    textCanvas.width = size;
+    textCanvas.height = size;
+    const textCtx = textCanvas.getContext('2d');
+
+    class Particle {
+      constructor() { this.resetInMist(); this.x = this.startX; this.y = this.startY; }
+      resetInMist() {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * (ballRadius - size*0.047);
+        this.startX = centerX + r * Math.cos(angle);
+        this.startY = centerY + r * Math.sin(angle);
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.targetX = null; this.targetY = null;
+        this.destX = null; this.destY = null;
+        this.isTarget = false;
+        this.size = Math.random() * size*0.05 + size*0.031;
+        this.alpha = Math.random() * 0.1 + 0.02;
+      }
+      update() {
+        const limit = ballRadius - size*0.047;
+        if (state === 'MIST') {
+          this.vx += (Math.random() - 0.5) * 0.05;
+          this.vy += (Math.random() - 0.5) * 0.05;
+          this.vx *= 0.99; this.vy *= 0.99;
+          this.x += this.vx; this.y += this.vy;
+          const dx = this.x - centerX, dy = this.y - centerY;
+          const dist = Math.sqrt(dx*dx+dy*dy);
+          if (dist > limit) {
+            const angle = Math.atan2(dy, dx);
+            this.x = centerX + limit * Math.cos(angle);
+            this.y = centerY + limit * Math.sin(angle);
+            this.vx *= -0.4; this.vy *= -0.4;
+          }
+        } else if (state === 'FORMING' || state === 'HOLDING') {
+          if (this.targetX !== null && this.targetY !== null) {
+            this.x += (this.targetX - this.x) * 0.12;
+            this.y += (this.targetY - this.y) * 0.12;
+          } else { this.alpha *= 0.95; this.x += this.vx*0.1; this.y += this.vy*0.1; }
+        } else if (state === 'DISSOLVING') {
+          if (this.destX !== null && this.destY !== null) {
+            this.x += (this.destX - this.x) * 0.08;
+            this.y += (this.destY - this.y) * 0.08;
+            this.alpha += (0.06 - this.alpha) * 0.05;
+            this.size += ((Math.random()*size*0.05 + size*0.031) - this.size) * 0.05;
+            const dist = Math.hypot(this.destX - this.x, this.destY - this.y);
+            if (dist < 2.0) { this.vx = (Math.random()-0.5)*0.4; this.vy = (Math.random()-0.5)*0.4; }
+          }
+        }
+      }
+      draw() {
+        ctx.save();
+        const [r,g,b] = T.mist;
+        if (this.isTarget && state !== 'DISSOLVING') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 2.0, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(215,245,255,0.95)';
+          ctx.fill();
+        } else {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.beginPath();
+          const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+          gradient.addColorStop(0, `rgba(${r},${g},${b},${this.alpha})`);
+          gradient.addColorStop(0.5, `rgba(${Math.round(r*0.65)},${Math.round(g*0.49)},${Math.round(b*0.86)},${this.alpha*0.4})`);
+          gradient.addColorStop(1, 'rgba(50,20,90,0)');
+          ctx.fillStyle = gradient;
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+    function getTextTargets(text) {
+      textCtx.clearRect(0,0,size,size);
+      textCtx.fillStyle = '#ffffff';
+      textCtx.font = `${Math.round(size*0.06875)}px "Press Start 2P", monospace`;
+      textCtx.textAlign = 'center';
+      textCtx.textBaseline = 'middle';
+      textCtx.fillText(text.toUpperCase(), centerX, centerY);
+      const imgData = textCtx.getImageData(0,0,size,size).data;
+      const targets = [];
+      const stride = Math.max(1, Math.round(size/128));
+      for (let y = 0; y < size; y += stride) {
+        for (let x = 0; x < size; x += stride) {
+          const alphaIndex = (y*size+x)*4+3;
+          if (imgData[alphaIndex] > 128) targets.push({x,y});
+        }
+      }
+      return targets;
+    }
+
+    function formWord(word) {
+      if (!word || !word.trim()) return;
+      const targets = getTextTargets(word);
+      targets.sort(() => Math.random() - 0.5);
+      particles.forEach((p, idx) => {
+        if (idx < targets.length) { p.targetX = targets[idx].x; p.targetY = targets[idx].y; p.isTarget = true; }
+        else { p.targetX = null; p.targetY = null; p.isTarget = false; }
+      });
+      state = 'FORMING';
+      clearTimeout(stateTimer);
+      stateTimer = setTimeout(startDissolve, 1800);
+    }
+
+    function startDissolve() {
+      state = 'DISSOLVING';
+      particles.forEach(p => {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * (ballRadius - size*0.047);
+        p.destX = centerX + r * Math.cos(angle);
+        p.destY = centerY + r * Math.sin(angle);
+      });
+      clearTimeout(stateTimer);
+      stateTimer = setTimeout(() => {
+        state = 'MIST';
+        particles.forEach(p => p.resetInMist());
+        stateTimer = setTimeout(() => formWord(T.word), 600);
+      }, 1200);
+    }
+
+    function animate() {
+      ctx.clearRect(0,0,size,size);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const glow = ctx.createRadialGradient(centerX, centerY, size*0.031, centerX, centerY, ballRadius);
+      glow.addColorStop(0, T.glow);
+      glow.addColorStop(1, 'rgba(10,5,25,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, ballRadius, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+    setTimeout(() => formWord(T.word), 800);
+  </script>
+</body>
+</html>
