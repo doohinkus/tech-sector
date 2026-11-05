@@ -9,6 +9,17 @@
     canvas { display: block; }
     .hidden { display: none !important; }
     .crystal-ball-wrapper { position: relative; border-radius: 50%; overflow: hidden; }
+    .crystal-ball-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 5%;
+      left: 15%;
+      width: 45%;
+      height: 25%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 80%);
+      pointer-events: none;
+    }
     .stand { background: linear-gradient(180deg, #4a2c11 0%, #201004 100%); border-radius: 50% 50% 10% 10% / 100% 100% 20% 20%; box-shadow: 0 10px 20px rgba(0,0,0,0.8); border-top: 3px solid #6e431f; }
   </style>
 </head>
